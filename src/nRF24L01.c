@@ -53,7 +53,6 @@ GPIO_InitTypeDef GPIO_InitStruct;
 	/*enable port c gpio clock*/
 	__GPIOC_CLK_ENABLE();
 
-	/*enable all 4 stepper gpios*/
 	GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_11 |GPIO_PIN_12;
 	
 	/*set gpios as output with no pull ups*/
@@ -62,6 +61,25 @@ GPIO_InitTypeDef GPIO_InitStruct;
 	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
 	GPIO_InitStruct.Alternate = 6;
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = GPIO_PIN_9 | GPIO_PIN_8;
+	
+	/*set gpios as output with no pull ups*/
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+	GPIO_InitStruct.Alternate = 0;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = GPIO_PIN_13;
+	
+	/*set gpios as output with no pull ups*/
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+	GPIO_InitStruct.Alternate = 0;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
 	return 0;
 }
   
