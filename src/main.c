@@ -51,7 +51,8 @@ int main(int argc, char **argv)
   }
 
   my_Init();
-  
+
+  /* This is the main loop */  
   while(1) {
     TaskInput();
     my_Loop();
