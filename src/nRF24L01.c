@@ -3,11 +3,12 @@
 volatile unsigned int sta;
 
 unsigned char TX_ADDRESS[TX_ADR_WIDTH]  = {0x34,0x43,0x10,0x10,0x01}; // Define a static TX address
+unsigned char Encoder[15];
 static SPI_HandleTypeDef spi;
 
 
 /*******************************************************************************
- * Function Name   : SPI1_RW
+ * Function Name   : SPI3_RW
  * Description : Sends a byte through the SPI interface and return the byte
  *                received from the SPI bus.
  * Input       : byte : byte to send.
@@ -85,7 +86,7 @@ GPIO_InitTypeDef GPIO_InitStruct;
   
 
 
-uint8_t SPI1_readWrite(uint8_t byte) {
+uint8_t SPI3_readWrite(uint8_t byte) {
   HAL_StatusTypeDef rc;
   uint8_t recv;
   rc = HAL_SPI_TransmitReceive(&spi, &byte, &recv, 1, 100);
@@ -96,57 +97,65 @@ uint8_t SPI1_readWrite(uint8_t byte) {
   return recv;
 }
 
+void TX_test()
+{
+  SPI3_readWrite(0);
+  TX_Mode();
+  SPIInit();
+  
+}
+
 /*	// Loop while DR register in not empty
-	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-	// Send byte through the SPI1 peripheral
-	SPI_I2S_SendData(SPI1, byte);
+	while (SPI_I2S_GetFlagStatus(SPI3, SPI_I2S_FLAG_TXE) == RESET);
+	// Send byte through the SPI3 peripheral
+	SPI_I2S_SendData(SPI3, byte);
 	// Wait to receive a byte
-	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+	while (SPI_I2S_GetFlagStatus(SPI3, SPI_I2S_FLAG_RXNE) == RESET);
 	// Return the byte read from the SPI bus
-	return SPI_I2S_ReceiveData(SPI1); */
+	return SPI_I2S_ReceiveData(SPI3); */
 
 
-unsigned char SPI1_readWriteReg(unsigned char reg, unsigned char value) {
+unsigned char SPI3_readWriteReg(unsigned char reg, unsigned char value) {
 	unsigned char status;
 	CSN_L();
 	// Select register
-	status = SPI1_readWrite(reg);
+	status = SPI3_readWrite(reg);
 	// Set value
-	SPI1_readWrite(value);
+	SPI3_readWrite(value);
 	CSN_H();
 	return (status);
 }
 
-unsigned char SPI1_readReg(unsigned char reg) {
+unsigned char SPI3_readReg(unsigned char reg) {
 	unsigned char reg_val;
 	CSN_L();
-	SPI1_readWrite(reg);
-	reg_val = SPI1_readWrite(0);
+	SPI3_readWrite(reg);
+	reg_val = SPI3_readWrite(0);
 	CSN_H();
 	return (reg_val);
 }
 
-unsigned char SPI1_readBuf(unsigned char reg, unsigned char *pBuf,
+unsigned char SPI3_readBuf(unsigned char reg, unsigned char *pBuf,
 		unsigned char bytes) {
 	unsigned char status, i;
 	CSN_L();
 	// Select register to write to and read status byte
-	status = SPI1_readWrite(reg);
+	status = SPI3_readWrite(reg);
 	for (i = 0; i < bytes; i++){
-		pBuf[i] = SPI1_readWrite(0);
+		pBuf[i] = SPI3_readWrite(0);
         }
 	CSN_H();
 	return (status);
 }
 
-unsigned char SPI1_writeBuf(unsigned char reg, unsigned char *pBuf,
+unsigned char SPI3_writeBuf(unsigned char reg, unsigned char *pBuf,
 		unsigned char bytes) {
 	unsigned char status, i;
 	CSN_L();
 	// Select register to write to and read status byte
-	status = SPI1_readWrite(reg);
+	status = SPI3_readWrite(reg);
 	for (i = 0; i < bytes; i++) // then write all byte in buffer(*pBuf)
-		SPI1_readWrite(*pBuf++);
+		SPI3_readWrite(*pBuf++);
 	CSN_H();
 	return (status);
 }
@@ -155,19 +164,19 @@ void RX_Mode(void) {
 	CE_L(); //GPIO_ResetBits // Set CE pin low
         
         //scrittura dell'indirizzo di ricezione
-	SPI1_writeBuf(RF_WRITE_REG + RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH);
+	SPI3_writeBuf(RF_WRITE_REG + RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH);
         //Enable ‘Auto Acknowledgment'
-	SPI1_readWriteReg(RF_WRITE_REG + EN_AA, 0x01);          // Enable Auto.Ack:Pipe0
+	SPI3_readWriteReg(RF_WRITE_REG + EN_AA, 0x01);          // Enable Auto.Ack:Pipe0
         //Enabled RX Addresses
-	SPI1_readWriteReg(RF_WRITE_REG + EN_RXADDR, 0x01);      // Enable Pipe0
+	SPI3_readWriteReg(RF_WRITE_REG + EN_RXADDR, 0x01);      // Enable Pipe0
         //Selezione del canale (0-125)
-	SPI1_readWriteReg(RF_WRITE_REG + RF_CH, 40);    	// Select RF channel 40
+	SPI3_readWriteReg(RF_WRITE_REG + RF_CH, 40);    	// Select RF channel 40
         //Number of bytes in RX payload in data pipe 0
-	SPI1_readWriteReg(RF_WRITE_REG + RX_PW_P0, TX_PLOAD_WIDTH);
+	SPI3_readWriteReg(RF_WRITE_REG + RX_PW_P0, TX_PLOAD_WIDTH);
         //Selezione della velocità di trasmissione (1 o 2 Mbps) e dell'output power
-	SPI1_readWriteReg(RF_WRITE_REG + RF_SETUP, 0x07);       // TX_PWR:0dBm, Datarate:1Mbps, // LNA:HCURR
+	SPI3_readWriteReg(RF_WRITE_REG + RF_SETUP, 0x07);       // TX_PWR:0dBm, Datarate:1Mbps, // LNA:HCURR
         //Scrittura nel registo di configurazione degli altri parametri necessari
-	SPI1_readWriteReg(RF_WRITE_REG + CONFIG, 0x0f); 	// Set PWR_UP bit, enable CRC(2 bytes) & Prim:RX. RX_DR enabled
+	SPI3_readWriteReg(RF_WRITE_REG + CONFIG, 0x0f); 	// Set PWR_UP bit, enable CRC(2 bytes) & Prim:RX. RX_DR enabled
         
 	CE_H(); // GPIO_SetBits // Set CE pin high
         
@@ -189,19 +198,19 @@ void RX_Mode_Adv(unsigned char* addr,
 	CE_L(); //GPIO_ResetBits // Set CE pin low
         
         //scrittura dell'indirizzo di ricezione
-	SPI1_writeBuf(RF_WRITE_REG + RX_ADDR_P0, addr, addr_width);
+	SPI3_writeBuf(RF_WRITE_REG + RX_ADDR_P0, addr, addr_width);
         //Enable ‘Auto Acknowledgment'
-	SPI1_readWriteReg(RF_WRITE_REG + EN_AA, aa);          // Enable Auto.Ack:Pipe0
+	SPI3_readWriteReg(RF_WRITE_REG + EN_AA, aa);          // Enable Auto.Ack:Pipe0
         //Enabled RX Addresses
-	SPI1_readWriteReg(RF_WRITE_REG + EN_RXADDR, rxaddr);      // Enable Pipe0
+	SPI3_readWriteReg(RF_WRITE_REG + EN_RXADDR, rxaddr);      // Enable Pipe0
         //Selezione del canale (0-125)
-	SPI1_readWriteReg(RF_WRITE_REG + RF_CH, rfch);    	// Select RF channel 40
+	SPI3_readWriteReg(RF_WRITE_REG + RF_CH, rfch);    	// Select RF channel 40
         //Number of bytes in RX payload in data pipe 0
-	SPI1_readWriteReg(RF_WRITE_REG + RX_PW_P0, TX_PLOAD_WIDTH);
+	SPI3_readWriteReg(RF_WRITE_REG + RX_PW_P0, TX_PLOAD_WIDTH);
         //Selezione della velocità di trasmissione (1 o 2 Mbps) e dell'output power
-	SPI1_readWriteReg(RF_WRITE_REG + RF_SETUP, rfset);       // TX_PWR:0dBm, Datarate:2Mbps, // LNA:HCURR
+	SPI3_readWriteReg(RF_WRITE_REG + RF_SETUP, rfset);       // TX_PWR:0dBm, Datarate:2Mbps, // LNA:HCURR
         //Scrittura nel registo di configurazione degli altri parametri necessari
-	SPI1_readWriteReg(RF_WRITE_REG + CONFIG, conf); 	// Set PWR_UP bit, enable CRC(2 bytes) & Prim:RX. RX_DR enabled
+	SPI3_readWriteReg(RF_WRITE_REG + CONFIG, conf); 	// Set PWR_UP bit, enable CRC(2 bytes) & Prim:RX. RX_DR enabled
         
 	CE_H(); // GPIO_SetBits // Set CE pin high
 }
@@ -210,20 +219,20 @@ void TX_Mode(void) {
         CE_L(); //GPIO_ResetBits // Set CE pin low
         
         //scrittura nel registro dell'indirizzo di trasmissione e di ricezione
-	SPI1_writeBuf(RF_WRITE_REG + TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);
-	SPI1_writeBuf(RF_WRITE_REG + RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH);
+	SPI3_writeBuf(RF_WRITE_REG + TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);
+	SPI3_writeBuf(RF_WRITE_REG + RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH);
         //Enable ‘Auto Acknowledgment'
-	SPI1_readWriteReg(RF_WRITE_REG + EN_AA, 0x01);          // Enable Auto.Ack:Pipe0
+	SPI3_readWriteReg(RF_WRITE_REG + EN_AA, 0x01);          // Enable Auto.Ack:Pipe0
         //Enabled RX Addresses
-	SPI1_readWriteReg(RF_WRITE_REG + EN_RXADDR, 0x01);      // Enable Pipe0
+	SPI3_readWriteReg(RF_WRITE_REG + EN_RXADDR, 0x01);      // Enable Pipe0
         //Setup ritrasmissione automatica
-	SPI1_readWriteReg(RF_WRITE_REG + SETUP_RETR, 0x1a);     // 500us + 86us, 10 retrans...
+	SPI3_readWriteReg(RF_WRITE_REG + SETUP_RETR, 0x1a);     // 500us + 86us, 10 retrans...
         //Selezione del canale (0-125)
-	SPI1_readWriteReg(RF_WRITE_REG + RF_CH, 40);            // Select RF channel 40
+	SPI3_readWriteReg(RF_WRITE_REG + RF_CH, 40);            // Select RF channel 40
         //Selezione della velocità di trasmissione (1 o 2 Mbps) e dell'output power
-	SPI1_readWriteReg(RF_WRITE_REG + RF_SETUP, 0x07);       // TX_PWR:0dBm, Datarate:1Mbps, // LNA:HCURR
+	SPI3_readWriteReg(RF_WRITE_REG + RF_SETUP, 0x07);       // TX_PWR:0dBm, Datarate:1Mbps, // LNA:HCURR
         //scrittura nel registo di configurazione degli altri parametri necessari
-	SPI1_readWriteReg(RF_WRITE_REG + CONFIG, 0x0e);         // Set PWR_UP bit, enable CRC(2 bytes) & Prim:TX. MAX_RT & TX_DS enabled
+	SPI3_readWriteReg(RF_WRITE_REG + CONFIG, 0x0e);         // Set PWR_UP bit, enable CRC(2 bytes) & Prim:TX. MAX_RT & TX_DS enabled
         
         CE_H(); // GPIO_SetBits // Set CE pin high
 }
@@ -241,20 +250,20 @@ void TX_Mode_Adv(unsigned char* addr,
         CE_L(); //GPIO_ResetBits // Set CE pin low
         
         //scrittura nel registro dell'indirizzo di trasmissione e di ricezione
-	SPI1_writeBuf(RF_WRITE_REG + TX_ADDR, addr, addr_width);
-	SPI1_writeBuf(RF_WRITE_REG + RX_ADDR_P0, addr, addr_width);
+	SPI3_writeBuf(RF_WRITE_REG + TX_ADDR, addr, addr_width);
+	SPI3_writeBuf(RF_WRITE_REG + RX_ADDR_P0, addr, addr_width);
         //Enable ‘Auto Acknowledgment'
-	SPI1_readWriteReg(RF_WRITE_REG + EN_AA, aa);
+	SPI3_readWriteReg(RF_WRITE_REG + EN_AA, aa);
         //Enabled RX Addresses
-	SPI1_readWriteReg(RF_WRITE_REG + EN_RXADDR, rxaddr);
+	SPI3_readWriteReg(RF_WRITE_REG + EN_RXADDR, rxaddr);
         //Setup ritrasmissione automatica
-	SPI1_readWriteReg(RF_WRITE_REG + SETUP_RETR, set_retr);
+	SPI3_readWriteReg(RF_WRITE_REG + SETUP_RETR, set_retr);
         //Selezione del canale (0-125)
-	SPI1_readWriteReg(RF_WRITE_REG + RF_CH, rfch);
+	SPI3_readWriteReg(RF_WRITE_REG + RF_CH, rfch);
         //Selezione della velocità di trasmissione (1 o 2 Mbps) e dell'output power
-	SPI1_readWriteReg(RF_WRITE_REG + RF_SETUP, rfset);
+	SPI3_readWriteReg(RF_WRITE_REG + RF_SETUP, rfset);
         //scrittura nel registo di configurazione degli altri parametri necessari
-	SPI1_readWriteReg(RF_WRITE_REG + CONFIG, conf);
+	SPI3_readWriteReg(RF_WRITE_REG + CONFIG, conf);
         
         CE_H(); // GPIO_SetBits // Set CE pin high
 }
