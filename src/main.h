@@ -61,8 +61,9 @@
 void USART3_Init(void);
 void SPI1_Init(void);
 void USART_test();
-void RX_test();
+
 void TX_test();
+void RX_test();
 
 void receiveMode();
 

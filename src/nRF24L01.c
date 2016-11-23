@@ -5,6 +5,8 @@ volatile unsigned int sta;
 unsigned char TX_ADDRESS[TX_ADR_WIDTH]  = {0x34,0x43,0x10,0x10,0x01}; // Define a static TX address
 unsigned char Encoder[15];
 static SPI_HandleTypeDef spi;
+unsigned char rx_buf[TX_PLOAD_WIDTH];
+void Check_Rec();
 
 
 /*******************************************************************************
@@ -17,7 +19,7 @@ static SPI_HandleTypeDef spi;
  *******************************************************************************/
 void SPIInit(void){
   HAL_StatusTypeDef rc;
-
+  __SPI3_CLK_ENABLE();
   /*uint8_t ID, type, size;*/
  spi.Instance = SPI3;
   spi.Init.Mode = SPI_MODE_MASTER;
@@ -83,8 +85,7 @@ GPIO_InitTypeDef GPIO_InitStruct;
 
 	return 0;
 }
-  
-
+ 
 
 uint8_t SPI3_readWrite(uint8_t byte) {
   HAL_StatusTypeDef rc;
@@ -99,12 +100,97 @@ uint8_t SPI3_readWrite(uint8_t byte) {
 
 void TX_test()
 {
+static uint8_t count;  
+unsigned char vEncoder[] = "123456";
+  GPIOInit();
+  SPIInit();
   SPI3_readWrite(0);
   TX_Mode();
-  SPIInit();
-  
+   while(!BSP_PB_GetState(BUTTON_USER))
+  {
+   vEncoder[0]=count;
+   SPI3_writeBuf(WR_TX_PLOAD, vEncoder,6 );
+   SPI3_readWriteReg(RF_WRITE_REG+STATUS,(SPI3_readReg(RF_READ_REG+STATUS)));  
+   Delay_us(500000);
+   printf("button pushed\n");
+   count++;
+  }
 }
 
+void RX_test()
+{
+  GPIOInit();
+  SPIInit();
+ while(!BSP_PB_GetState(BUTTON_USER))
+  {
+  RX_Mode();
+  Check_Rec();
+  Delay_us(500000);
+  }
+}
+
+void Init_test()
+{
+  GPIOInit();
+  SPIInit(); 
+}
+
+void Read_Reg()
+{
+  GPIOInit();
+  SPIInit(); 
+  SPI3_readWriteReg(RF_WRITE_REG + STATUS, 0x87);  
+}
+
+
+
+
+void Check_Rec()
+{
+	uint32_t i;
+    SPI3_readBuf(RD_RX_PLOAD,rx_buf,TX_PLOAD_WIDTH);
+    SPI3_readWriteReg(RF_WRITE_REG+STATUS,(SPI3_readReg(RF_READ_REG+STATUS)));
+    printf("Readreg: 0x%02x\n",
+	SPI3_readReg(RF_READ_REG + RD_RX_PLOAD));
+    if (rx_buf[0] != 0 || SPI3_readReg(RF_READ_REG + RD_RX_PLOAD))
+    { 
+	for(i=0; i<6; i++) {
+		printf("rx_buf[%lu]:0x%02x\n",
+			i, rx_buf[i]);
+	}	
+      printf("Hello how are you\n");
+      BSP_LED_On(1);
+      
+    }
+    else
+    {
+      printf(" doesn't work\n");
+    } 
+}
+
+void checkMessage()
+{
+ uint32_t i;
+    SPI3_readBuf(RD_RX_PLOAD,rx_buf,TX_PLOAD_WIDTH);
+    SPI3_readWriteReg(RF_WRITE_REG+STATUS,(SPI3_readReg(RF_READ_REG+STATUS)));
+  	for(i=0; i<6; i++) {
+		printf("rx_buf[%lu]:0x%02x\n",
+			i, rx_buf[i]);
+	}	
+  BSP_LED_On(5);
+  printf("Arrive message\n");
+}
+
+void Delay_us(unsigned int n)
+{
+  uint32_t i;
+  while (n--) 
+  {
+    i = 2;
+    while (i--)
+      ;
+  }
+}
 /*	// Loop while DR register in not empty
 	while (SPI_I2S_GetFlagStatus(SPI3, SPI_I2S_FLAG_TXE) == RESET);
 	// Send byte through the SPI3 peripheral

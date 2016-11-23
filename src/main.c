@@ -4,6 +4,7 @@
 #include "stm32f3_discovery.h"
 #include "stm32f3_discovery_accelerometer.h"
 #include "stm32f3_discovery_gyroscope.h"
+#include "main.h"
 
 #include "common.h"
 
@@ -14,6 +15,14 @@ const uint32_t numLEDs = sizeof(LEDs)/sizeof(LEDs[0]);
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
+unsigned char rx_buf[TX_PLOAD_WIDTH];
+void TX_test();
+void RX_test();
+void Check_Rec();
+void AB_test();
+void Init_test(); 
+void checkMessage();
+void Read_Reg();
 
 int main(int argc, char **argv)
 {
@@ -23,6 +32,11 @@ int main(int argc, char **argv)
   SystemClock_Config();
 
   HAL_Init();
+  // STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_GPIO);
+  //STM_EVAL_LEDInit(LED3);
+  //STM_EVAL_LEDInit(LED4);
+  //STM_EVAL_LEDInit(LED5);
+  //STM_EVAL_LEDInit(LED6);
 
   /* Start the Watchdog */
 
@@ -113,6 +127,7 @@ static void SystemClock_Config(void)
   * @param  None
   * @retval None
   */
+
 void Error_Handler(void)
 {
   BSP_LED_On(LED6);
@@ -121,6 +136,88 @@ void Error_Handler(void)
   {
   }
 }
+
+
+void CmdTaskTest(int mode)      
+{
+    if(mode != CMD_INTERACTIVE) return;
+    printf("code works");
+    TX_test();
+     
+}
+
+ADD_CMD("TestTX",CmdTaskTest,"  transmission successfull");
+
+
+void CmdRecTest(int mode)      
+{
+    if(mode != CMD_INTERACTIVE) return;
+    printf("code OK");
+    RX_test();
+    checkMessage();
+     
+}
+
+ADD_CMD("TestRX",CmdRecTest,"  Reception successfull");
+
+
+void CmdMsgTest(int mode)      
+{
+    if(mode != CMD_INTERACTIVE) return;
+    printf("ASk whether msg is received");
+    checkMessage();
+    //Check_Rec();
+    
+     
+}
+
+ADD_CMD("TestMX",CmdMsgTest,"  Reception Message successfull");
+
+void CmdInitTest(int mode)      
+{
+    if(mode != CMD_INTERACTIVE) return;
+     Init_test();  
+}
+
+ADD_CMD("TestInit",CmdInitTest,"  Initialization successfull");
+
+
+void CmdRegTest(int mode)      
+{
+    uint32_t reg;
+    if(mode != CMD_INTERACTIVE) return;
+    reg = 0;
+    fetch_uint32_arg(&reg);
+    printf("Register 0x%02x : 0x%02x\n",
+            (unsigned int)reg,    SPI3_readReg(reg));
+        
+}
+
+ADD_CMD("TestRG",CmdRegTest,"  Register Value stored");
+
+void CmdReg_Val(int mode)      
+{
+    if(mode != CMD_INTERACTIVE) return;
+     Read_Reg(); 
+}
+
+ADD_CMD("TestVal",CmdReg_Val,"  register value ");
+
+void CmdTestRegWrite(int mode)      
+{
+    uint32_t val;
+    uint32_t reg;
+    if(mode != CMD_INTERACTIVE) return;
+    reg = 0;
+    val = 0;
+    fetch_uint32_arg(&reg);
+    fetch_uint32_arg(&val);
+    SPI3_readWriteReg(RF_WRITE_REG+reg, val);
+    printf("Register 0x%02x : 0x%02x\n",
+            (unsigned int)reg,    SPI3_readReg(reg));       
+}
+ADD_CMD("TestRegW",CmdTestRegWrite,"  register value ");
+
 
 void SysTick_Handler(void)
 {

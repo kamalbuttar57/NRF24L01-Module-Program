@@ -60,9 +60,9 @@ void RX_Mode_Adv(unsigned char *, unsigned char, unsigned char, unsigned char,
 void TX_Mode(void);
 void TX_Mode_Adv(unsigned char*, unsigned char, unsigned char, unsigned char, 
                  unsigned char, unsigned char, unsigned char, unsigned char, unsigned char);
-unsigned char SPI1_readReg(unsigned char);
-unsigned char SPI1_readWriteReg(unsigned char, unsigned char);
-unsigned char SPI1_readBuf(unsigned char, unsigned char *, unsigned char);
-unsigned char SPI1_writeBuf(unsigned char, unsigned char *, unsigned char);
+unsigned char SPI3_readReg(unsigned char);
+unsigned char SPI3_readWriteReg(unsigned char, unsigned char);
+unsigned char SPI3_readBuf(unsigned char, unsigned char *, unsigned char);
+unsigned char SPI3_writeBuf(unsigned char, unsigned char *, unsigned char);
 
 #endif /* __NRF24L01_H */
