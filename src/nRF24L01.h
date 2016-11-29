@@ -50,7 +50,8 @@
 #define RX_PW_P4        0x15  // 'RX payload width, pipe4' register address
 #define RX_PW_P5        0x16  // 'RX payload width, pipe5' register address
 #define FIFO_STATUS     0x17  // 'FIFO Status Register' register address
-   
+#define DYNPD		0x1C  // Enable Dynamic payload length
+#define FEATURE		0x1D  // Feature register
 #define TX_ADR_WIDTH    5   // 5 bytes TX(RX) address width
 #define TX_PLOAD_WIDTH  20  // 20 bytes TX payload   
    

@@ -98,36 +98,40 @@ uint8_t SPI3_readWrite(uint8_t byte) {
   return recv;
 }
 
+void RX_test()
+{
+  //GPIOInit();
+  //SPIInit();
+//SPI3_readWriteReg(FLUSH_RX,0);
+  RX_Mode();
+while(!BSP_PB_GetState(BUTTON_USER))
+  {
+    Check_Rec();
+  Delay_us(300);
+  }
+}
+
 void TX_test()
 {
 static uint8_t count;  
 unsigned char vEncoder[] = "123456";
-  GPIOInit();
-  SPIInit();
-  SPI3_readWrite(0);
+  //GPIOInit();
+  //SPIInit();
+  //SPI3_readWrite(0);
   TX_Mode();
-   while(!BSP_PB_GetState(BUTTON_USER))
-  {
+  SPI3_writeBuf(FLUSH_TX,NULL,0);
+  // while(!BSP_PB_GetState(BUTTON_USER))
+ // {
    vEncoder[0]=count;
+   SPI3_readWriteReg(RF_WRITE_REG+STATUS,0x70);
    SPI3_writeBuf(WR_TX_PLOAD, vEncoder,6 );
-   SPI3_readWriteReg(RF_WRITE_REG+STATUS,(SPI3_readReg(RF_READ_REG+STATUS)));  
-   Delay_us(500000);
-   printf("button pushed\n");
+   //SPI3_readWriteReg(RF_WRITE_REG+STATUS,(SPI3_readReg(RF_READ_REG+STATUS)));  
+ //  Delay_us(30000);
    count++;
-  }
+//  }
+printf("button pushed\n");
 }
 
-void RX_test()
-{
-  GPIOInit();
-  SPIInit();
- while(!BSP_PB_GetState(BUTTON_USER))
-  {
-  RX_Mode();
-  Check_Rec();
-  Delay_us(500000);
-  }
-}
 
 void Init_test()
 {
@@ -137,8 +141,8 @@ void Init_test()
 
 void Read_Reg()
 {
-  GPIOInit();
-  SPIInit(); 
+  //GPIOInit();
+  //SPIInit(); 
   SPI3_readWriteReg(RF_WRITE_REG + STATUS, 0x87);  
 }
 
@@ -148,24 +152,32 @@ void Read_Reg()
 void Check_Rec()
 {
 	uint32_t i;
+   uint8_t status;
+   status = SPI3_readReg(RF_READ_REG+STATUS);
+   //if((status & 0x0e) == 0x0e)
+   //  return;
+   if((status & 0x40) == 0)
+     return;
+
+   printf("Rx: status=0x%02x\n", status);
+   for(i=0;  i<TX_PLOAD_WIDTH; i++) {
+     rx_buf[i] = 0;
+   }
     SPI3_readBuf(RD_RX_PLOAD,rx_buf,TX_PLOAD_WIDTH);
-    SPI3_readWriteReg(RF_WRITE_REG+STATUS,(SPI3_readReg(RF_READ_REG+STATUS)));
-    printf("Readreg: 0x%02x\n",
-	SPI3_readReg(RF_READ_REG + RD_RX_PLOAD));
-    if (rx_buf[0] != 0 || SPI3_readReg(RF_READ_REG + RD_RX_PLOAD))
-    { 
+    SPI3_readWriteReg(RF_WRITE_REG+STATUS,0x70);
+    SPI3_readWriteReg(FLUSH_RX,0);
+   // SPI3_readWriteReg(RF_WRITE_REG+STATUS,(SPI3_readReg(RF_READ_REG+STATUS)));
+   // printf("Readreg: 0x%02x\n",
+	// SPI3_readReg(RF_READ_REG + RD_RX_PLOAD));
+   
 	for(i=0; i<6; i++) {
 		printf("rx_buf[%lu]:0x%02x\n",
 			i, rx_buf[i]);
-	}	
-      printf("Hello how are you\n");
+
+      //printf("Hello how are you\n");
       BSP_LED_On(1);
       
     }
-    else
-    {
-      printf(" doesn't work\n");
-    } 
 }
 
 void checkMessage()
@@ -261,6 +273,9 @@ void RX_Mode(void) {
 	SPI3_readWriteReg(RF_WRITE_REG + RX_PW_P0, TX_PLOAD_WIDTH);
         //Selezione della velocità di trasmissione (1 o 2 Mbps) e dell'output power
 	SPI3_readWriteReg(RF_WRITE_REG + RF_SETUP, 0x07);       // TX_PWR:0dBm, Datarate:1Mbps, // LNA:HCURR
+	SPI3_readWriteReg(RF_WRITE_REG + DYNPD, 0x6f);
+	SPI3_readWriteReg(RF_WRITE_REG + FEATURE, 0x07);
+
         //Scrittura nel registo di configurazione degli altri parametri necessari
 	SPI3_readWriteReg(RF_WRITE_REG + CONFIG, 0x0f); 	// Set PWR_UP bit, enable CRC(2 bytes) & Prim:RX. RX_DR enabled
         
@@ -317,6 +332,9 @@ void TX_Mode(void) {
 	SPI3_readWriteReg(RF_WRITE_REG + RF_CH, 40);            // Select RF channel 40
         //Selezione della velocità di trasmissione (1 o 2 Mbps) e dell'output power
 	SPI3_readWriteReg(RF_WRITE_REG + RF_SETUP, 0x07);       // TX_PWR:0dBm, Datarate:1Mbps, // LNA:HCURR
+
+	SPI3_readWriteReg(RF_WRITE_REG + DYNPD, 0x6f);
+	SPI3_readWriteReg(RF_WRITE_REG + FEATURE, 0x07);
         //scrittura nel registo di configurazione degli altri parametri necessari
 	SPI3_readWriteReg(RF_WRITE_REG + CONFIG, 0x0e);         // Set PWR_UP bit, enable CRC(2 bytes) & Prim:TX. MAX_RT & TX_DS enabled
         

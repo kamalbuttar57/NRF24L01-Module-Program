@@ -17,8 +17,8 @@ SRCS += monitor.c parser.c dump.c syscall.c terminal.c \
 
 # Target board selection, uncomment relevant line
 # Rev C boards:
-STLINK=stlink-v2-1.cfg
-GDB_SCRIPT=gdb_cmds_v2_1
+#STLINK=stlink-v2-1.cfg
+#GDB_SCRIPT=gdb_cmds_v2_1
 # Rev B boards:
 STLINK=stlink-v2.cfg
 GDB_SCRIPT=gdb_cmds_v2
