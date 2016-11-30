@@ -26,6 +26,9 @@ void AB_test();
 void Init_test(); 
 void checkMessage();
 void Read_Reg();
+void SPIInit(void);
+void Led_Check(uint8_t led);
+int8_t GPIOInit(void);
 
 int main(int argc, char **argv)
 {
@@ -69,8 +72,13 @@ int main(int argc, char **argv)
 
   my_Init();
 
-  /* This is the main loop */  
-  while(1) {
+  /* This is the main loop */
+GPIOInit();  
+   SPIInit();
+    RX_Mode();
+  
+   while(1) {
+    Check_Rec2();
     TaskInput();
     my_Loop();
     /* Tickle the watchdog */
@@ -149,17 +157,19 @@ void CmdTaskTest(int mode)
      
 }
 
-ADD_CMD("TestTX",CmdTaskTest,"  transmission successfull");
+ADD_CMD("TestTX3",CmdTaskTest,"  transmission successfull");
 
-void CmdTaskTest2(int mode)      
+void CmdSend(int mode)      
 {
+   uint32_t reg;
     if(mode != CMD_INTERACTIVE) return;
+    fetch_uint32_arg(&reg);
     printf("code works");
-    TX_test2();
+    Led_Check(reg);
      
 }
 
-ADD_CMD("TestTX2",CmdTaskTest2,"  transmission successfull");
+ADD_CMD("TestTX",CmdSend,"  transmission successfull");
 void CmdRecTest(int mode)      
 {
     if(mode != CMD_INTERACTIVE) return;

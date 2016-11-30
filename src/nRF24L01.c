@@ -47,7 +47,7 @@ void SPIInit(void){
 	return;
   }
 
-  
+  SPI3_readWriteReg(FLUSH_RX,0);
   return;
 }
 
@@ -131,6 +131,20 @@ unsigned char vEncoder[] = "123456";
    count++;
 //  }
 printf("button pushed\n");
+}
+void Led_Check(uint8_t led)
+{
+ 
+unsigned char vEncoder[1] ;
+ 
+  TX_Mode();
+  SPI3_writeBuf(FLUSH_TX,NULL,0);
+  
+   vEncoder[0]=led;
+   SPI3_readWriteReg(RF_WRITE_REG+STATUS,0x70);
+   SPI3_writeBuf(WR_TX_PLOAD, vEncoder ,1);
+   HAL_Delay(50);
+   RX_Mode();
 }
 
 void RX_test2()
@@ -219,16 +233,25 @@ void Check_Rec2()
    for(i=0;  i<TX_PLOAD_WIDTH; i++) {
      rx_buf[i] = 0;
    }
-    SPI3_readBuf(RD_RX_PLOAD,rx_buf,TX_PLOAD_WIDTH);
+    SPI3_readBuf(RD_RX_PLOAD,rx_buf,1);
     SPI3_readWriteReg(RF_WRITE_REG+STATUS,0x70);
     SPI3_readWriteReg(FLUSH_RX,0);
- 	for(i=0; i<6; i++) {
-		printf("rx_buf[%lu]:0x%02x\n",
-			i, rx_buf[i]);
-      BSP_LED_Off(5);
-      BSP_LED_On(2);
+ 	
+		printf("rx_buf:0x%02x\n",
+			 rx_buf[0]);
+     for(i=0;i<8;i++) {
+      if(i==rx_buf[0]){
+       BSP_LED_On(i);
+ }
+
+     else{
+      BSP_LED_Off(i);
+}
+}
+   
       
-    }
+      
+   
 }
 
 void checkMessage()
