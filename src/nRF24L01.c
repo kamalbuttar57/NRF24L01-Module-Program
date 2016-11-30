@@ -7,6 +7,7 @@ unsigned char Encoder[15];
 static SPI_HandleTypeDef spi;
 unsigned char rx_buf[TX_PLOAD_WIDTH];
 void Check_Rec();
+void Check_Rec2();
 
 
 /*******************************************************************************
@@ -107,7 +108,7 @@ void RX_test()
 while(!BSP_PB_GetState(BUTTON_USER))
   {
     Check_Rec();
-  Delay_us(300);
+   Delay_us(300);
   }
 }
 
@@ -130,6 +131,31 @@ unsigned char vEncoder[] = "123456";
    count++;
 //  }
 printf("button pushed\n");
+}
+
+void RX_test2()
+{
+
+  RX_Mode();
+while(!BSP_PB_GetState(BUTTON_USER))
+  {
+    Check_Rec2();
+  Delay_us(300);
+  }
+}
+
+
+void TX_test2()
+{
+static uint8_t count;  
+unsigned char vEncoder[] = "Mike";
+  TX_Mode();
+  SPI3_writeBuf(FLUSH_TX,NULL,0);
+   vEncoder[0]=count;
+   SPI3_readWriteReg(RF_WRITE_REG+STATUS,0x70);
+   SPI3_writeBuf(WR_TX_PLOAD, vEncoder,6 );
+   count++;
+printf("button 2 pushed\n");
 }
 
 
@@ -175,7 +201,32 @@ void Check_Rec()
 			i, rx_buf[i]);
 
       //printf("Hello how are you\n");
-      BSP_LED_On(1);
+      BSP_LED_On(5);
+      BSP_LED_Off(2);
+      
+    }
+}
+
+void Check_Rec2()
+{
+	uint32_t i;
+   uint8_t status;
+   status = SPI3_readReg(RF_READ_REG+STATUS);
+   if((status & 0x40) == 0)
+     return;
+
+   printf("Rx: status=0x%02x\n", status);
+   for(i=0;  i<TX_PLOAD_WIDTH; i++) {
+     rx_buf[i] = 0;
+   }
+    SPI3_readBuf(RD_RX_PLOAD,rx_buf,TX_PLOAD_WIDTH);
+    SPI3_readWriteReg(RF_WRITE_REG+STATUS,0x70);
+    SPI3_readWriteReg(FLUSH_RX,0);
+ 	for(i=0; i<6; i++) {
+		printf("rx_buf[%lu]:0x%02x\n",
+			i, rx_buf[i]);
+      BSP_LED_Off(5);
+      BSP_LED_On(2);
       
     }
 }
@@ -189,7 +240,6 @@ void checkMessage()
 		printf("rx_buf[%lu]:0x%02x\n",
 			i, rx_buf[i]);
 	}	
-  BSP_LED_On(5);
   printf("Arrive message\n");
 }
 

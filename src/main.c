@@ -18,7 +18,10 @@ static void SystemClock_Config(void);
 unsigned char rx_buf[TX_PLOAD_WIDTH];
 void TX_test();
 void RX_test();
+void TX_test2();
+void RX_test2();
 void Check_Rec();
+void Check_Rec2();
 void AB_test();
 void Init_test(); 
 void checkMessage();
@@ -148,17 +151,36 @@ void CmdTaskTest(int mode)
 
 ADD_CMD("TestTX",CmdTaskTest,"  transmission successfull");
 
+void CmdTaskTest2(int mode)      
+{
+    if(mode != CMD_INTERACTIVE) return;
+    printf("code works");
+    TX_test2();
+     
+}
 
+ADD_CMD("TestTX2",CmdTaskTest2,"  transmission successfull");
 void CmdRecTest(int mode)      
 {
     if(mode != CMD_INTERACTIVE) return;
     printf("code OK");
     RX_test();
-    checkMessage();
+   // checkMessage();
      
 }
 
 ADD_CMD("TestRX",CmdRecTest,"  Reception successfull");
+
+
+void CmdRecTest2(int mode)      
+{
+    if(mode != CMD_INTERACTIVE) return;
+    printf("code OK");
+    RX_test2();
+    //checkMessage();
+     
+}
+ADD_CMD("TestRX2",CmdRecTest2,"  Reception successfull");
 
 
 void CmdMsgTest(int mode)      
