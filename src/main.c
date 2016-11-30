@@ -82,6 +82,11 @@ GPIOInit();
     TaskInput();
     my_Loop();
     /* Tickle the watchdog */
+    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)) {	// checks if PA0 is set
+		Led_Check(1);	 // switch on LED
+		} else {
+			Led_Check(2); // switch off LED
+		}
   }
 
   return 0;

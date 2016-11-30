@@ -58,6 +58,7 @@ GPIO_InitTypeDef GPIO_InitStruct;
 	__GPIOC_CLK_ENABLE();
 
 	GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_11 |GPIO_PIN_12;
+        GPIO_InitStruct.Pin = GPIO_PIN_1;
 	
 	/*set gpios as output with no pull ups*/
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
