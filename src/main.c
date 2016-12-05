@@ -73,7 +73,7 @@ int main(int argc, char **argv)
   my_Init();
 
   /* This is the main loop */
-GPIOInit();  
+   GPIOInit();  
    SPIInit();
     RX_Mode();
   
@@ -82,11 +82,6 @@ GPIOInit();
     TaskInput();
     my_Loop();
     /* Tickle the watchdog */
-    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)) {	// checks if PA0 is set
-		Led_Check(1);	 // switch on LED
-		} else {
-			Led_Check(2); // switch off LED
-		}
   }
 
   return 0;
@@ -191,7 +186,7 @@ void CmdRecTest2(int mode)
 {
     if(mode != CMD_INTERACTIVE) return;
     printf("code OK");
-    RX_test2();
+  //  RX_test2();
     //checkMessage();
      
 }
